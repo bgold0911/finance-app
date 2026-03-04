@@ -1,5 +1,8 @@
 import { RETURNS_DATA } from "./historicalReturns";
 
+const INFLATION_RATE = 0.02; // Baked-in 2% annual inflation
+const CASH_RETURN = 0.02;    // Fixed nominal return for cash (~0% real)
+
 export interface SimulationInputs {
   currentAge: number;
   retirementAge: number;
@@ -7,8 +10,9 @@ export interface SimulationInputs {
   currentPortfolio: number;
   annualSavings: number;
   annualRetirementSpend: number;
-  inflationRate: number;
-  stockPct: number; // 0–1, e.g. 0.8 for 80% stocks
+  stockPct: number; // 0–1
+  bondPct: number;  // 0–1
+  cashPct: number;  // 0–1  (ideally stockPct + bondPct + cashPct = 1)
 }
 
 export interface YearlyPercentiles {
@@ -30,10 +34,10 @@ export interface SimulationResult {
   failureYear: number | null; // median failure year if successRate < 100
 }
 
-function randomReturn(stockPct: number): number {
+function randomReturn(stockPct: number, bondPct: number, cashPct: number): number {
   const idx = Math.floor(Math.random() * RETURNS_DATA.length);
   const { stocks, bonds } = RETURNS_DATA[idx];
-  return stockPct * stocks + (1 - stockPct) * bonds;
+  return stockPct * stocks + bondPct * bonds + cashPct * CASH_RETURN;
 }
 
 function percentile(sorted: number[], p: number): number {
@@ -49,9 +53,16 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
     currentPortfolio,
     annualSavings,
     annualRetirementSpend,
-    inflationRate,
     stockPct,
+    bondPct,
+    cashPct,
   } = inputs;
+
+  // Normalize allocation in case it doesn't sum to 1
+  const allocTotal = stockPct + bondPct + cashPct;
+  const normStock = allocTotal > 0 ? stockPct / allocTotal : 1 / 3;
+  const normBond  = allocTotal > 0 ? bondPct  / allocTotal : 1 / 3;
+  const normCash  = allocTotal > 0 ? cashPct  / allocTotal : 1 / 3;
 
   const totalYears = lifeExpectancy - currentAge;
   const yearsToRetirement = retirementAge - currentAge;
@@ -67,7 +78,6 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
   for (let sim = 0; sim < numSimulations; sim++) {
     let portfolio = currentPortfolio;
     let failed = false;
-    let failedAtYear = -1;
 
     portfoliosByYear[0][sim] = portfolio;
 
@@ -77,7 +87,7 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
         continue;
       }
 
-      const ret = randomReturn(stockPct);
+      const ret = randomReturn(normStock, normBond, normCash);
       const age = currentAge + year;
 
       if (age <= retirementAge) {
@@ -86,13 +96,12 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
       } else {
         // Distribution: grow - inflation-adjusted spend
         const yearsRetired = age - retirementAge;
-        const inflatedSpend = annualRetirementSpend * Math.pow(1 + inflationRate, yearsRetired);
+        const inflatedSpend = annualRetirementSpend * Math.pow(1 + INFLATION_RATE, yearsRetired);
         portfolio = portfolio * (1 + ret) - inflatedSpend;
       }
 
       if (portfolio <= 0) {
         failed = true;
-        failedAtYear = year;
         portfolio = 0;
       }
 
@@ -102,7 +111,8 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
     if (!failed) {
       successes++;
     } else {
-      failureYears.push(failedAtYear);
+      const failedYear = portfoliosByYear.findIndex((yearVals, i) => i > 0 && yearVals[sim] === 0);
+      if (failedYear > 0) failureYears.push(failedYear);
     }
   }
 

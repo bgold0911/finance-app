@@ -13,8 +13,9 @@ const DEFAULT_INPUTS: SimulationInputs = {
   currentPortfolio: 100_000,
   annualSavings: 20_000,
   annualRetirementSpend: 60_000,
-  inflationRate: 0.03,
-  stockPct: 0.80,
+  stockPct: 0.70,
+  bondPct: 0.20,
+  cashPct: 0.10,
 };
 
 export default function MonteCarloPage() {
