@@ -36,7 +36,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-1 shadow-sm">
       <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
-      <p className="text-xl font-bold text-[#111F42]">{value}</p>
+      <p className="text-xl font-bold text-[#006039]">{value}</p>
       {sub && <p className="text-xs text-gray-400">{sub}</p>}
     </div>
   );
@@ -73,7 +73,7 @@ export default function ResultsSummary({ result, retirementAge, lifeExpectancy }
       </div>
 
       {successRate < 95 && (
-        <div className="bg-[#111F42] text-white rounded-xl p-4 text-sm">
+        <div className="bg-[#006039] text-white rounded-xl p-4 text-sm">
           <p className="font-bold mb-1">💡 How to improve your odds</p>
           <ul className="text-gray-300 flex flex-col gap-1 pl-4 list-disc">
             <li>Increase annual savings — even $5,000/year more has a large long-term impact</li>

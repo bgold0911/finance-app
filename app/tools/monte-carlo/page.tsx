@@ -39,9 +39,9 @@ export default function MonteCarloPage() {
         <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
           <span>Tools</span>
           <span>/</span>
-          <span className="text-[#111F42] font-medium">Monte Carlo Simulator</span>
+          <span className="text-[#006039] font-medium">Monte Carlo Simulator</span>
         </div>
-        <h1 className="text-3xl font-bold text-[#111F42] mb-2">
+        <h1 className="text-3xl font-bold text-[#006039] mb-2">
           Retirement Monte Carlo Simulator
         </h1>
         <p className="text-gray-500 max-w-2xl">
@@ -79,7 +79,7 @@ export default function MonteCarloPage() {
           ) : (
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center flex flex-col items-center gap-4">
               <span className="text-6xl">📊</span>
-              <h2 className="text-xl font-bold text-[#111F42]">Ready to simulate</h2>
+              <h2 className="text-xl font-bold text-[#006039]">Ready to simulate</h2>
               <p className="text-gray-500 max-w-sm text-sm">
                 Adjust the sliders on the left to match your situation, then click{" "}
                 <strong>Run Simulation</strong> to see your probability of a successful
@@ -88,7 +88,7 @@ export default function MonteCarloPage() {
               <button
                 onClick={handleRun}
                 disabled={running}
-                className="bg-[#111F42] text-white font-bold px-8 py-3 rounded-xl hover:bg-[#1F3568] transition-colors"
+                className="bg-[#006039] text-white font-bold px-8 py-3 rounded-xl hover:bg-[#004d2e] transition-colors"
               >
                 Run Simulation →
               </button>

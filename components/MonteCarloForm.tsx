@@ -28,7 +28,7 @@ function SliderField({ label, value, min, max, step, display, onChange }: Slider
     <div className="flex flex-col gap-1.5">
       <div className="flex justify-between items-center">
         <label className="text-sm font-medium text-gray-700">{label}</label>
-        <span className="text-sm font-bold text-[#111F42]">{display}</span>
+        <span className="text-sm font-bold text-[#006039]">{display}</span>
       </div>
       <input
         type="range"
@@ -37,7 +37,7 @@ function SliderField({ label, value, min, max, step, display, onChange }: Slider
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-[#111F42] h-2 rounded-full cursor-pointer"
+        className="w-full accent-[#006039] h-2 rounded-full cursor-pointer"
       />
       <div className="flex justify-between text-xs text-gray-400">
         <span>{min.toLocaleString()}</span>
@@ -53,7 +53,7 @@ export default function MonteCarloForm({ inputs, onChange, onRun, running }: Pro
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col gap-6">
-      <h2 className="text-lg font-bold text-[#111F42]">Your Situation</h2>
+      <h2 className="text-lg font-bold text-[#006039]">Your Situation</h2>
 
       {/* Ages */}
       <div className="grid grid-cols-2 gap-4">
@@ -137,7 +137,7 @@ export default function MonteCarloForm({ inputs, onChange, onRun, running }: Pro
       <button
         onClick={onRun}
         disabled={running}
-        className="w-full bg-[#111F42] text-white font-bold py-3.5 rounded-xl hover:bg-[#1F3568] transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-base"
+        className="w-full bg-[#006039] text-white font-bold py-3.5 rounded-xl hover:bg-[#004d2e] transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-base"
       >
         {running ? "Running 1,000 simulations…" : "Run Simulation →"}
       </button>
