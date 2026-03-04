@@ -52,7 +52,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   const d = payload[0].payload;
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-xs">
-      <p className="font-bold text-[#006039] mb-2">Age {label}</p>
+      <p className="font-bold text-[#664930] mb-2">Age {label}</p>
       <div className="flex flex-col gap-1">
         <div className="flex justify-between gap-4">
           <span className="text-gray-500">90th %ile</span>
@@ -64,7 +64,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         </div>
         <div className="flex justify-between gap-4 border-t border-gray-100 pt-1">
           <span className="text-gray-500">Median (50th)</span>
-          <span className="font-bold text-[#006039]">{fmtDollars(d._p50)}</span>
+          <span className="font-bold text-[#664930]">{fmtDollars(d._p50)}</span>
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-gray-500">25th %ile</span>
@@ -84,18 +84,12 @@ export default function MonteCarloChart({ percentiles, retirementAge }: Props) {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-      <h3 className="text-base font-bold text-[#006039] mb-1">Portfolio Value Over Time</h3>
+      <h3 className="text-base font-bold text-[#664930] mb-1">Portfolio Value Over Time</h3>
       <p className="text-xs text-gray-500 mb-4">
         Shaded bands show the range of 1,000 simulated outcomes (10th–90th percentile)
       </p>
       <ResponsiveContainer width="100%" height={320}>
         <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
-          <defs>
-            <linearGradient id="grad90" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#2e9e57" stopOpacity={0.15} />
-              <stop offset="100%" stopColor="#2e9e57" stopOpacity={0.05} />
-            </linearGradient>
-          </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="age" tick={{ fontSize: 11 }} tickLine={false} />
           <YAxis
@@ -108,21 +102,21 @@ export default function MonteCarloChart({ percentiles, retirementAge }: Props) {
           <Tooltip content={<CustomTooltip />} />
           <ReferenceLine
             x={retirementAge}
-            stroke="#006039"
+            stroke="#664930"
             strokeDasharray="4 4"
-            label={{ value: "Retirement", position: "top", fontSize: 10, fill: "#006039" }}
+            label={{ value: "Retirement", position: "top", fontSize: 10, fill: "#664930" }}
           />
           {/* Stacked from bottom: p10 base, then bands */}
           <Area type="monotone" dataKey="p10" stackId="1" stroke="none" fill="transparent" />
           <Area type="monotone" dataKey="band_10_25" stackId="1" stroke="none" fill="#ef4444" fillOpacity={0.25} />
           <Area type="monotone" dataKey="band_25_50" stackId="1" stroke="none" fill="#f97316" fillOpacity={0.2} />
-          <Area type="monotone" dataKey="band_50_75" stackId="1" stroke="#2e9e57" strokeWidth={1.5} fill="#22c55e" fillOpacity={0.2} />
-          <Area type="monotone" dataKey="band_75_90" stackId="1" stroke="none" fill="#2e9e57" fillOpacity={0.25} />
+          <Area type="monotone" dataKey="band_50_75" stackId="1" stroke="#997E67" strokeWidth={1.5} fill="#997E67" fillOpacity={0.2} />
+          <Area type="monotone" dataKey="band_75_90" stackId="1" stroke="none" fill="#664930" fillOpacity={0.25} />
         </AreaChart>
       </ResponsiveContainer>
       <div className="flex flex-wrap gap-4 mt-4 text-xs text-gray-500 justify-center">
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-500 opacity-60 inline-block" /> 75th–90th %ile</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-400 opacity-50 inline-block" /> 50th–75th %ile (median up)</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm inline-block" style={{background:"#664930", opacity:0.6}} /> 75th–90th %ile</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm inline-block" style={{background:"#997E67", opacity:0.5}} /> 50th–75th %ile (median up)</span>
         <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-orange-400 opacity-50 inline-block" /> 25th–50th %ile</span>
         <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-400 opacity-50 inline-block" /> 10th–25th %ile</span>
       </div>

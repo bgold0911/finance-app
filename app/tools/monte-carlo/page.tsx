@@ -39,9 +39,9 @@ export default function MonteCarloPage() {
         <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
           <span>Tools</span>
           <span>/</span>
-          <span className="text-[#006039] font-medium">Monte Carlo Simulator</span>
+          <span className="text-[#664930] font-medium">Monte Carlo Simulator</span>
         </div>
-        <h1 className="text-3xl font-bold text-[#006039] mb-2">
+        <h1 className="text-3xl font-bold text-[#664930] mb-2">
           Retirement Monte Carlo Simulator
         </h1>
         <p className="text-gray-500 max-w-2xl">
@@ -79,7 +79,7 @@ export default function MonteCarloPage() {
           ) : (
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center flex flex-col items-center gap-4">
               <span className="text-6xl">📊</span>
-              <h2 className="text-xl font-bold text-[#006039]">Ready to simulate</h2>
+              <h2 className="text-xl font-bold text-[#664930]">Ready to simulate</h2>
               <p className="text-gray-500 max-w-sm text-sm">
                 Adjust the sliders on the left to match your situation, then click{" "}
                 <strong>Run Simulation</strong> to see your probability of a successful
@@ -88,7 +88,7 @@ export default function MonteCarloPage() {
               <button
                 onClick={handleRun}
                 disabled={running}
-                className="bg-[#006039] text-white font-bold px-8 py-3 rounded-xl hover:bg-[#004d2e] transition-colors"
+                className="bg-[#664930] text-white font-bold px-8 py-3 rounded-xl hover:bg-[#4d3520] transition-colors"
               >
                 Run Simulation →
               </button>
@@ -96,8 +96,8 @@ export default function MonteCarloPage() {
           )}
 
           {/* Methodology note */}
-          <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 text-xs text-gray-500">
-            <p className="font-semibold text-gray-700 mb-1">Methodology</p>
+          <div className="bg-[#FAF6F2] rounded-xl border border-[#CCBEB1] p-4 text-xs text-gray-500">
+            <p className="font-semibold text-[#664930] mb-1">Methodology</p>
             <p>
               Each simulation randomly samples from 97 years of historical annual returns
               (S&P 500 + 10-year Treasuries, 1928–2024) using bootstrap resampling with replacement.

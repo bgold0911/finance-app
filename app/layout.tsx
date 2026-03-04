@@ -17,7 +17,7 @@ export default function RootLayout({
       <body className="antialiased min-h-screen flex flex-col">
         <Nav />
         <main className="flex-1">{children}</main>
-        <footer className="bg-[#006039] text-white/60 text-sm text-center py-6 mt-16">
+        <footer className="bg-[#664930] text-white/60 text-sm text-center py-6 mt-16">
           <p>Brandon's Finance Guide · Educational tools only · Not financial advice</p>
         </footer>
       </body>

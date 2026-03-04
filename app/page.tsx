@@ -8,7 +8,7 @@ const TOOLS = [
     description:
       "Run 1,000 retirement simulations using historical market data. Get a probability-of-success score and see the range of possible futures.",
     tag: "LIVE",
-    tagColor: "bg-green-100 text-green-700",
+    tagColor: "bg-[#FFDBBB] text-[#664930]",
     available: true,
   },
   {
@@ -67,15 +67,15 @@ export default function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-[#006039] text-white">
+      <section className="bg-[#664930] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <p className="text-white/70 text-sm font-bold uppercase tracking-widest mb-4">
+          <p className="text-[#CCBEB1] text-sm font-bold uppercase tracking-widest mb-4">
             Brandon's Finance Guide
           </p>
           <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-6">
             Your Financial Future,
             <br />
-            <span className="text-white underline decoration-white/30 underline-offset-4">Simulated.</span>
+            <span className="text-[#FFDBBB] underline decoration-[#CCBEB1]/50 underline-offset-4">Simulated.</span>
           </h1>
           <p className="text-white/80 text-lg max-w-2xl mx-auto mb-10">
             Free calculators that use real data and math — not guesses. Built to help
@@ -83,7 +83,7 @@ export default function HomePage() {
           </p>
           <Link
             href="/tools/monte-carlo"
-            className="inline-block bg-white text-[#006039] font-bold text-base px-8 py-4 rounded-lg hover:bg-gray-100 transition-colors"
+            className="inline-block bg-white text-[#664930] font-bold text-base px-8 py-4 rounded-lg hover:bg-[#FFDBBB] transition-colors"
           >
             Try the Monte Carlo Simulator →
           </Link>
@@ -92,26 +92,26 @@ export default function HomePage() {
       </section>
 
       {/* Stats bar */}
-      <section className="bg-[#004d2e] text-white">
+      <section className="bg-[#4d3520] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-2xl font-bold text-white">1,000</p>
-            <p className="text-sm text-white/60 mt-1">Simulations per run</p>
+            <p className="text-sm text-[#CCBEB1] mt-1">Simulations per run</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-white">97 years</p>
-            <p className="text-sm text-white/60 mt-1">Of historical return data</p>
+            <p className="text-sm text-[#CCBEB1] mt-1">Of historical return data</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-white">100% free</p>
-            <p className="text-sm text-white/60 mt-1">No account required</p>
+            <p className="text-sm text-[#CCBEB1] mt-1">No account required</p>
           </div>
         </div>
       </section>
 
       {/* Tools grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-2xl font-bold text-[#006039] mb-2">All Tools</h2>
+        <h2 className="text-2xl font-bold text-[#664930] mb-2">All Tools</h2>
         <p className="text-gray-500 mb-10">
           Interactive calculators — results update as you type, no account needed.
         </p>
@@ -120,7 +120,7 @@ export default function HomePage() {
             <div
               key={tool.title}
               className={`bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-4 shadow-sm transition-shadow ${
-                tool.available ? "hover:shadow-md hover:border-[#006039]" : "opacity-70"
+                tool.available ? "hover:shadow-md hover:border-[#997E67]" : "opacity-70"
               }`}
             >
               <div className="flex items-start justify-between">
@@ -130,13 +130,13 @@ export default function HomePage() {
                 </span>
               </div>
               <div>
-                <h3 className="font-bold text-[#006039] text-lg mb-1">{tool.title}</h3>
+                <h3 className="font-bold text-[#664930] text-lg mb-1">{tool.title}</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">{tool.description}</p>
               </div>
               {tool.available ? (
                 <Link
                   href={tool.href}
-                  className="mt-auto inline-block text-center bg-[#006039] text-white font-semibold text-sm px-4 py-2.5 rounded-lg hover:bg-[#004d2e] transition-colors"
+                  className="mt-auto inline-block text-center bg-[#664930] text-white font-semibold text-sm px-4 py-2.5 rounded-lg hover:bg-[#4d3520] transition-colors"
                 >
                   Open Tool →
                 </Link>
