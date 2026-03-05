@@ -10,9 +10,13 @@ export interface SimulationInputs {
   currentPortfolio: number;
   annualSavings: number;
   annualRetirementSpend: number;
-  stockPct: number; // 0–1
-  bondPct: number;  // 0–1
-  cashPct: number;  // 0–1  (ideally stockPct + bondPct + cashPct = 1)
+  stockPct: number;
+  bondPct: number;
+  cashPct: number;
+  socialSecurityMonthly: number; // monthly SS benefit (fixed nominal)
+  bridgeIncome: number;          // annual part-time income in early retirement
+  bridgeUntilAge: number;        // age bridge income stops
+  useGlidePath: boolean;         // gradually shift to conservative allocation
 }
 
 export interface YearlyPercentiles {
@@ -25,19 +29,33 @@ export interface YearlyPercentiles {
 }
 
 export interface SimulationResult {
-  successRate: number; // 0–100
+  successRate: number;
   percentiles: YearlyPercentiles[];
   medianAtRetirement: number;
   medianAtEnd: number;
   p10AtEnd: number;
   p90AtEnd: number;
-  failureYear: number | null; // median failure year if successRate < 100
+  failureYear: number | null;
+  failureAges: number[]; // age at failure for each failed simulation
 }
 
-function randomReturn(stockPct: number, bondPct: number, cashPct: number): number {
+function randomReturn(s: number, b: number, c: number): number {
   const idx = Math.floor(Math.random() * RETURNS_DATA.length);
   const { stocks, bonds } = RETURNS_DATA[idx];
-  return stockPct * stocks + bondPct * bonds + cashPct * CASH_RETURN;
+  return s * stocks + b * bonds + c * CASH_RETURN;
+}
+
+function glidedAlloc(
+  year: number,
+  totalYears: number,
+  normS: number, normB: number, normC: number
+): [number, number, number] {
+  const t = Math.min(1, year / totalYears);
+  return [
+    normS * (1 - t) + 0.20 * t,
+    normB * (1 - t) + 0.60 * t,
+    normC * (1 - t) + 0.20 * t,
+  ];
 }
 
 function percentile(sorted: number[], p: number): number {
@@ -47,76 +65,77 @@ function percentile(sorted: number[], p: number): number {
 
 export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): SimulationResult {
   const {
-    currentAge,
-    retirementAge,
-    lifeExpectancy,
-    currentPortfolio,
-    annualSavings,
-    annualRetirementSpend,
-    stockPct,
-    bondPct,
-    cashPct,
+    currentAge, retirementAge, lifeExpectancy,
+    currentPortfolio, annualSavings, annualRetirementSpend,
+    stockPct, bondPct, cashPct,
+    socialSecurityMonthly, bridgeIncome, bridgeUntilAge,
+    useGlidePath,
   } = inputs;
 
-  // Normalize allocation in case it doesn't sum to 1
+  const ssAnnual = socialSecurityMonthly * 12;
+
+  // Normalize allocation
   const allocTotal = stockPct + bondPct + cashPct;
-  const normStock = allocTotal > 0 ? stockPct / allocTotal : 1 / 3;
-  const normBond  = allocTotal > 0 ? bondPct  / allocTotal : 1 / 3;
-  const normCash  = allocTotal > 0 ? cashPct  / allocTotal : 1 / 3;
+  const normS = allocTotal > 0 ? stockPct / allocTotal : 1 / 3;
+  const normB = allocTotal > 0 ? bondPct  / allocTotal : 1 / 3;
+  const normC = allocTotal > 0 ? cashPct  / allocTotal : 1 / 3;
 
   const totalYears = lifeExpectancy - currentAge;
   const yearsToRetirement = retirementAge - currentAge;
 
-  // portfoliosByYear[year][sim] = portfolio value
   const portfoliosByYear: number[][] = Array.from({ length: totalYears + 1 }, () =>
     new Array(numSimulations).fill(0)
   );
 
   let successes = 0;
-  const failureYears: number[] = [];
+  const failureAges: number[] = [];
 
   for (let sim = 0; sim < numSimulations; sim++) {
     let portfolio = currentPortfolio;
-    let failed = false;
+    let failedAtYear = -1;
 
     portfoliosByYear[0][sim] = portfolio;
 
     for (let year = 1; year <= totalYears; year++) {
-      if (failed) {
+      if (failedAtYear >= 0) {
         portfoliosByYear[year][sim] = 0;
         continue;
       }
 
-      const ret = randomReturn(normStock, normBond, normCash);
+      const [s, b, c] = useGlidePath
+        ? glidedAlloc(year, totalYears, normS, normB, normC)
+        : [normS, normB, normC];
+
+      const ret = randomReturn(s, b, c);
       const age = currentAge + year;
 
       if (age <= retirementAge) {
-        // Accumulation: grow + add savings
+        // Accumulation phase
         portfolio = portfolio * (1 + ret) + annualSavings;
       } else {
-        // Distribution: grow - inflation-adjusted spend
+        // Distribution phase
         const yearsRetired = age - retirementAge;
         const inflatedSpend = annualRetirementSpend * Math.pow(1 + INFLATION_RATE, yearsRetired);
-        portfolio = portfolio * (1 + ret) - inflatedSpend;
+        const bridgeOffset = (bridgeIncome > 0 && age <= bridgeUntilAge) ? bridgeIncome : 0;
+        const netSpend = Math.max(0, inflatedSpend - ssAnnual - bridgeOffset);
+        portfolio = portfolio * (1 + ret) - netSpend;
       }
 
       if (portfolio <= 0) {
-        failed = true;
+        failedAtYear = year;
         portfolio = 0;
       }
 
       portfoliosByYear[year][sim] = portfolio;
     }
 
-    if (!failed) {
+    if (failedAtYear < 0) {
       successes++;
     } else {
-      const failedYear = portfoliosByYear.findIndex((yearVals, i) => i > 0 && yearVals[sim] === 0);
-      if (failedYear > 0) failureYears.push(failedYear);
+      failureAges.push(currentAge + failedAtYear);
     }
   }
 
-  // Compute percentiles at each year
   const percentiles: YearlyPercentiles[] = portfoliosByYear.map((yearVals, yearIdx) => {
     const sorted = [...yearVals].sort((a, b) => a - b);
     return {
@@ -129,11 +148,9 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
     };
   });
 
-  const retirementIdx = yearsToRetirement;
-  const endIdx = totalYears;
-
-  const retirementVals = [...portfoliosByYear[retirementIdx]].sort((a, b) => a - b);
-  const endVals = [...portfoliosByYear[endIdx]].sort((a, b) => a - b);
+  const retirementVals = [...portfoliosByYear[yearsToRetirement]].sort((a, b) => a - b);
+  const endVals = [...portfoliosByYear[totalYears]].sort((a, b) => a - b);
+  const sortedFailures = [...failureAges].sort((a, b) => a - b);
 
   return {
     successRate: (successes / numSimulations) * 100,
@@ -142,10 +159,10 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
     medianAtEnd: Math.max(0, percentile(endVals, 50)),
     p10AtEnd: Math.max(0, percentile(endVals, 10)),
     p90AtEnd: Math.max(0, percentile(endVals, 90)),
-    failureYear:
-      failureYears.length > 0
-        ? currentAge + Math.round(failureYears.sort((a, b) => a - b)[Math.floor(failureYears.length / 2)])
-        : null,
+    failureYear: sortedFailures.length > 0
+      ? sortedFailures[Math.floor(sortedFailures.length / 2)]
+      : null,
+    failureAges,
   };
 }
 
