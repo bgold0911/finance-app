@@ -13,14 +13,14 @@ export default function Nav() {
             <Link href="/tools/monte-carlo" className="text-sm text-[#CCBEB1] hover:text-white transition-colors">
               Retirement
             </Link>
-            <Link href="/" className="text-sm text-[#997E67] cursor-not-allowed">
-              Budgeting
+            <Link href="/tools/coast-fire" className="text-sm text-[#CCBEB1] hover:text-white transition-colors">
+              Coast FIRE
             </Link>
-            <Link href="/" className="text-sm text-[#997E67] cursor-not-allowed">
-              Debt
+            <Link href="/tools/debt-payoff" className="text-sm text-[#CCBEB1] hover:text-white transition-colors">
+              Debt Payoff
             </Link>
-            <Link href="/" className="text-sm text-[#997E67] cursor-not-allowed">
-              Investing
+            <Link href="/tools/rent-vs-buy" className="text-sm text-[#CCBEB1] hover:text-white transition-colors">
+              Rent vs. Buy
             </Link>
           </div>
           <Link
