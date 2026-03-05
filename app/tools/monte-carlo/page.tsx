@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import MonteCarloForm from "@/components/MonteCarloForm";
 import MonteCarloChart from "@/components/MonteCarloChart";
-import ResultsSummary, { SensitivityRow } from "@/components/ResultsSummary";
+import ResultsSummary, { SensitivityRow, ModelComparison } from "@/components/ResultsSummary";
 import { SimulationInputs, SimulationResult, runSimulation } from "@/lib/monteCarlo";
 
 const DEFAULT_INPUTS: SimulationInputs = {
@@ -50,6 +50,7 @@ export default function MonteCarloPage() {
   const [inputs, setInputs] = useState<SimulationInputs>(DEFAULT_INPUTS);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [sensitivityRows, setSensitivityRows] = useState<SensitivityRow[]>([]);
+  const [modelComparisons, setModelComparisons] = useState<ModelComparison[]>([]);
   const [running, setRunning] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -81,6 +82,27 @@ export default function MonteCarloPage() {
           return { label, successRate: sr, delta: sr - base };
         });
         setSensitivityRows(rows);
+
+        // Model comparison: run fat-tailed and CAPE-adjusted at 500 sims each
+        const comparisons: ModelComparison[] = [
+          {
+            label: "5-yr Block Bootstrap",
+            description: "Samples consecutive 5-year chunks from history — preserves crash/recovery sequences",
+            successRate: r.successRate,
+            isBaseline: true,
+          },
+          {
+            label: "Fat-Tailed (Student's t)",
+            description: "Draws from a heavy-tailed distribution — extreme years (crashes, booms) occur more often than history alone suggests",
+            successRate: runSimulation(inputs, 500, "fat-tailed").successRate,
+          },
+          {
+            label: "CAPE-Adjusted",
+            description: "Scales down expected stock returns based on today's elevated valuations (Shiller CAPE ~36) — the most pessimistic but arguably most forward-looking",
+            successRate: runSimulation(inputs, 500, "cape").successRate,
+          },
+        ];
+        setModelComparisons(comparisons);
         setRunning(false);
       }, 10);
     }, 400);
@@ -146,6 +168,7 @@ export default function MonteCarloPage() {
                 lifeExpectancy={inputs.lifeExpectancy}
                 annualRetirementSpend={inputs.annualRetirementSpend}
                 annualTaxCostAtRetirement={result.annualTaxCostAtRetirement}
+                modelComparisons={modelComparisons}
               />
               <MonteCarloChart
                 percentiles={result.percentiles}

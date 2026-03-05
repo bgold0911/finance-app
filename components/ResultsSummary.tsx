@@ -11,6 +11,13 @@ export interface SensitivityRow {
   delta: number;
 }
 
+export interface ModelComparison {
+  label: string;
+  description: string;
+  successRate: number;
+  isBaseline?: boolean;
+}
+
 interface Props {
   result: SimulationResult;
   retirementAge: number;
@@ -18,6 +25,7 @@ interface Props {
   annualRetirementSpend: number;
   sensitivityRows: SensitivityRow[];
   annualTaxCostAtRetirement: number;
+  modelComparisons: ModelComparison[];
 }
 
 // ── Success Gauge ──────────────────────────────────────────────────────────────
@@ -160,9 +168,56 @@ function FailureHistogram({ failureAges, totalSims }: { failureAges: number[]; t
   );
 }
 
+// ── Model Comparison Card ─────────────────────────────────────────────────────
+function ModelComparisonCard({ comparisons }: { comparisons: ModelComparison[] }) {
+  if (comparisons.length === 0) return null;
+  const baseline = comparisons.find((c) => c.isBaseline);
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+      <h3 className="text-base font-bold text-[#664930] mb-1">Model Sensitivity</h3>
+      <p className="text-xs text-gray-500 mb-4">
+        Same inputs, different sampling assumptions — shows how much the method affects your result
+      </p>
+      <div className="flex flex-col divide-y divide-gray-100">
+        {comparisons.map(({ label, description, successRate, isBaseline }) => {
+          const delta = baseline && !isBaseline ? successRate - baseline.successRate : null;
+          const deltaColor = delta === null ? "" : delta > 0 ? "text-green-600" : delta < 0 ? "text-red-500" : "text-gray-400";
+          const deltaSign  = delta !== null && delta > 0 ? "+" : "";
+          return (
+            <div key={label} className="py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                    {label}
+                    {isBaseline && (
+                      <span className="text-[10px] font-bold bg-[#FFDBBB] text-[#664930] px-1.5 py-0.5 rounded-full">
+                        current
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-xs text-gray-400">{description}</span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-sm font-bold text-[#664930]">{successRate.toFixed(1)}%</span>
+                  {delta !== null && (
+                    <span className={`text-xs font-bold w-14 text-right ${deltaColor}`}>
+                      {deltaSign}{delta.toFixed(1)}%
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Main Export ───────────────────────────────────────────────────────────────
 export default function ResultsSummary({
-  result, retirementAge, lifeExpectancy, annualRetirementSpend, sensitivityRows, annualTaxCostAtRetirement,
+  result, retirementAge, lifeExpectancy, annualRetirementSpend, sensitivityRows,
+  annualTaxCostAtRetirement, modelComparisons,
 }: Props) {
   const { successRate, medianAtRetirement, medianAtEnd, p10AtEnd, p90AtEnd, failureAges } = result;
 
@@ -203,6 +258,8 @@ export default function ResultsSummary({
       </div>
 
       <SensitivityTable rows={sensitivityRows} baseRate={successRate} />
+
+      <ModelComparisonCard comparisons={modelComparisons} />
 
       {failureAges.length > 0 && (
         <FailureHistogram failureAges={failureAges} totalSims={1000} />

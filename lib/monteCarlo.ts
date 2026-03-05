@@ -4,6 +4,36 @@ const INFLATION_RATE = 0.02; // Baked-in 2% annual inflation
 const CASH_RETURN = 0.02;    // Fixed nominal return for cash (~0% real)
 const BLOCK_SIZE = 5;        // Block bootstrap: sample 5 consecutive historical years at a time
 
+// ── Simulation method ───────────────────────────────────────────────────────
+export type SimMethod = "block5" | "fat-tailed" | "cape";
+
+// Precomputed historical stats for parametric methods
+const _n = RETURNS_DATA.length;
+const _meanS = RETURNS_DATA.reduce((a, d) => a + d.stocks, 0) / _n;
+const _meanB = RETURNS_DATA.reduce((a, d) => a + d.bonds,  0) / _n;
+const _stdS  = Math.sqrt(RETURNS_DATA.reduce((a, d) => a + (d.stocks - _meanS) ** 2, 0) / _n);
+const _stdB  = Math.sqrt(RETURNS_DATA.reduce((a, d) => a + (d.bonds  - _meanB) ** 2, 0) / _n);
+
+// CAPE-adjusted constants (Shiller CAPE as of early 2026)
+const CURRENT_CAPE = 36;
+const REAL_EARNINGS_GROWTH = 0.015;
+const CAPE_IMPLIED_NOMINAL = 1 / CURRENT_CAPE + INFLATION_RATE + REAL_EARNINGS_GROWTH;
+const CAPE_ADJUSTMENT = CAPE_IMPLIED_NOMINAL - _meanS; // negative: reduces each year's stock return
+
+// Box-Muller standard normal sample
+function randn(): number {
+  const u = 1 - Math.random(), v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+// Student's t sample with given degrees of freedom (heavier tails than normal)
+function studentT(df: number): number {
+  const z = randn();
+  let chi2 = 0;
+  for (let i = 0; i < df; i++) { const n = randn(); chi2 += n * n; }
+  return z / Math.sqrt(chi2 / df);
+}
+
 export interface SimulationInputs {
   currentAge: number;
   retirementAge: number;
@@ -66,7 +96,11 @@ function percentile(sorted: number[], p: number): number {
   return sorted[idx];
 }
 
-export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): SimulationResult {
+export function runSimulation(
+  inputs: SimulationInputs,
+  numSimulations = 1000,
+  method: SimMethod = "block5"
+): SimulationResult {
   const {
     currentAge, retirementAge, lifeExpectancy,
     currentPortfolio, annualSavings, annualRetirementSpend,
@@ -125,14 +159,28 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
         ? glidedAlloc(year, totalYears, normS, normB, normC)
         : [normS, normB, normC];
 
-      // Advance block bootstrap: pick new block when current one is exhausted
-      if (blockPos >= BLOCK_SIZE) {
-        blockStart = Math.floor(Math.random() * (maxBlockStart + 1));
-        blockPos = 0;
+      // Sample returns based on chosen method
+      let stockRet: number, bondRet: number;
+      if (method === "fat-tailed") {
+        // Student's t (df=4): heavier tails than normal, more frequent extreme years
+        stockRet = _meanS + _stdS * studentT(4);
+        bondRet  = _meanB + _stdB * studentT(4);
+      } else {
+        // block5 or cape: 5-year block bootstrap from history
+        if (blockPos >= BLOCK_SIZE) {
+          blockStart = Math.floor(Math.random() * (maxBlockStart + 1));
+          blockPos = 0;
+        }
+        const d = RETURNS_DATA[blockStart + blockPos];
+        stockRet = d.stocks;
+        bondRet  = d.bonds;
+        blockPos++;
+        if (method === "cape") {
+          // Shift stock returns down to reflect current elevated valuations (CAPE ~36)
+          stockRet += CAPE_ADJUSTMENT;
+        }
       }
-      const { stocks, bonds } = RETURNS_DATA[blockStart + blockPos];
-      blockPos++;
-      const ret = s * stocks + b * bonds + c * CASH_RETURN;
+      const ret = s * stockRet + b * bondRet + c * CASH_RETURN;
       const age = currentAge + year;
 
       if (age <= retirementAge) {

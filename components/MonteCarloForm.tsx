@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SimulationInputs } from "@/lib/monteCarlo";
+import { SimulationInputs, formatDollars } from "@/lib/monteCarlo";
 
 interface Props {
   inputs: SimulationInputs;
@@ -162,13 +162,26 @@ export default function MonteCarloForm({ inputs, onChange, running }: Props) {
           onChange={(v) => set("currentPortfolio", v)} />
 
         {/* Tax account breakdown */}
-        <button
-          onClick={() => setShowTax(!showTax)}
-          className="flex items-center gap-2 text-xs text-[#664930] font-semibold hover:underline w-fit"
-        >
-          <span>{showTax ? "▼" : "▶"}</span>
-          Break down by account type
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowTax(!showTax)}
+            className="flex items-center gap-2 text-xs text-[#664930] font-semibold hover:underline w-fit"
+          >
+            <span>{showTax ? "▼" : "▶"}</span>
+            Break down by account type
+          </button>
+          {showTax && (() => {
+            const acctSum = inputs.traditionalAmt + inputs.rothAmt + inputs.taxableAmt;
+            const match = Math.abs(acctSum - inputs.currentPortfolio) < 1;
+            return (
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                match ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+              }`}>
+                {match ? `✓ ${formatDollars(acctSum)}` : `${formatDollars(acctSum)} ≠ ${formatDollars(inputs.currentPortfolio)}`}
+              </span>
+            );
+          })()}
+        </div>
         {!showTax && (
           <p className="text-xs text-gray-400 -mt-2">
             Add account breakdown to model taxes on withdrawals
