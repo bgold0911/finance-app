@@ -150,7 +150,7 @@ function FailureHistogram({ failureAges, totalSims }: { failureAges: number[]; t
           <XAxis dataKey="age" tick={{ fontSize: 10 }} tickLine={false} />
           <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={30} />
           <Tooltip
-            formatter={(value: number) => [`${value} simulations`, "Failed"]}
+            formatter={(value: number | undefined) => [`${value ?? 0} simulations`, "Failed"]}
             labelFormatter={(label) => `Age ${label}`}
             contentStyle={{ fontSize: 11, borderRadius: 8 }}
           />
