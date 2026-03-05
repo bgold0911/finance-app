@@ -17,6 +17,7 @@ interface Props {
   lifeExpectancy: number;
   annualRetirementSpend: number;
   sensitivityRows: SensitivityRow[];
+  annualTaxCostAtRetirement: number;
 }
 
 // ── Success Gauge ──────────────────────────────────────────────────────────────
@@ -161,7 +162,7 @@ function FailureHistogram({ failureAges, totalSims }: { failureAges: number[]; t
 
 // ── Main Export ───────────────────────────────────────────────────────────────
 export default function ResultsSummary({
-  result, retirementAge, lifeExpectancy, annualRetirementSpend, sensitivityRows,
+  result, retirementAge, lifeExpectancy, annualRetirementSpend, sensitivityRows, annualTaxCostAtRetirement,
 }: Props) {
   const { successRate, medianAtRetirement, medianAtEnd, p10AtEnd, p90AtEnd, failureAges } = result;
 
@@ -192,6 +193,13 @@ export default function ResultsSummary({
           value={formatDollars(p90AtEnd)}
           sub={`90th percentile at age ${lifeExpectancy}`}
         />
+        {annualTaxCostAtRetirement > 0 && (
+          <StatCard
+            label="Est. Annual Tax Cost"
+            value={formatDollars(annualTaxCostAtRetirement)}
+            sub="Extra gross withdrawal to cover taxes"
+          />
+        )}
       </div>
 
       <SensitivityTable rows={sensitivityRows} baseRate={successRate} />

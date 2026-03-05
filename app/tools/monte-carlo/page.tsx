@@ -20,6 +20,12 @@ const DEFAULT_INPUTS: SimulationInputs = {
   bridgeIncome: 0,
   bridgeUntilAge: 70,
   useGlidePath: false,
+  traditionalPct: 0,
+  rothPct: 0,
+  taxablePct: 0,
+  ordinaryTaxRate: 0.22,
+  ltcgRate: 0.15,
+  gainFraction: 0.50,
 };
 
 function loadFromURL(): SimulationInputs {
@@ -139,6 +145,7 @@ export default function MonteCarloPage() {
                 retirementAge={inputs.retirementAge}
                 lifeExpectancy={inputs.lifeExpectancy}
                 annualRetirementSpend={inputs.annualRetirementSpend}
+                annualTaxCostAtRetirement={result.annualTaxCostAtRetirement}
               />
               <MonteCarloChart
                 percentiles={result.percentiles}

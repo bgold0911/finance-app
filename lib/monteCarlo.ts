@@ -18,6 +18,13 @@ export interface SimulationInputs {
   bridgeIncome: number;          // annual part-time income in early retirement
   bridgeUntilAge: number;        // age bridge income stops
   useGlidePath: boolean;         // gradually shift to conservative allocation
+  // Tax modeling (all default 0 = opt-in, no behavior change when off)
+  traditionalPct: number;        // fraction in traditional 401k/IRA (taxed as ordinary income)
+  rothPct: number;               // fraction in Roth (tax-free withdrawals)
+  taxablePct: number;            // fraction in taxable brokerage (gains taxed at LTCG rate)
+  ordinaryTaxRate: number;       // effective ordinary income tax rate in retirement
+  ltcgRate: number;              // long-term capital gains tax rate
+  gainFraction: number;          // fraction of taxable brokerage that is unrealized gains
 }
 
 export interface YearlyPercentiles {
@@ -38,6 +45,7 @@ export interface SimulationResult {
   p90AtEnd: number;
   failureYear: number | null;
   failureAges: number[]; // age at failure for each failed simulation
+  annualTaxCostAtRetirement: number; // estimated first-year tax drag (0 when tax modeling off)
 }
 
 function glidedAlloc(
@@ -65,9 +73,19 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
     stockPct, bondPct, cashPct,
     socialSecurityMonthly, bridgeIncome, bridgeUntilAge,
     useGlidePath,
+    traditionalPct, rothPct, taxablePct,
+    ordinaryTaxRate, ltcgRate, gainFraction,
   } = inputs;
 
   const ssAnnual = socialSecurityMonthly * 12;
+
+  // Tax gross-up factor: how much extra must be withdrawn per $1 of desired net spend
+  const taxAcctTotal = traditionalPct + rothPct + taxablePct;
+  const taxGrossFactor = taxAcctTotal > 0
+    ? (traditionalPct / (1 - ordinaryTaxRate))
+      + rothPct
+      + (taxablePct / (1 - gainFraction * ltcgRate))
+    : 1;
 
   // Normalize allocation
   const allocTotal = stockPct + bondPct + cashPct;
@@ -125,7 +143,8 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
         const inflatedSpend = annualRetirementSpend * Math.pow(1 + INFLATION_RATE, yearsRetired);
         const bridgeOffset = (bridgeIncome > 0 && age <= bridgeUntilAge) ? bridgeIncome : 0;
         const netSpend = Math.max(0, inflatedSpend - ssAnnual - bridgeOffset);
-        portfolio = portfolio * (1 + ret) - netSpend;
+        const grossWithdrawal = netSpend * taxGrossFactor;
+        portfolio = portfolio * (1 + ret) - grossWithdrawal;
       }
 
       if (portfolio <= 0) {
@@ -159,6 +178,9 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
   const endVals = [...portfoliosByYear[totalYears]].sort((a, b) => a - b);
   const sortedFailures = [...failureAges].sort((a, b) => a - b);
 
+  const baseNetSpend = Math.max(0, annualRetirementSpend - ssAnnual);
+  const annualTaxCostAtRetirement = baseNetSpend * (taxGrossFactor - 1);
+
   return {
     successRate: (successes / numSimulations) * 100,
     percentiles,
@@ -170,6 +192,7 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
       ? sortedFailures[Math.floor(sortedFailures.length / 2)]
       : null,
     failureAges,
+    annualTaxCostAtRetirement,
   };
 }
 
