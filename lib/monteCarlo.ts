@@ -2,6 +2,7 @@ import { RETURNS_DATA } from "./historicalReturns";
 
 const INFLATION_RATE = 0.02; // Baked-in 2% annual inflation
 const CASH_RETURN = 0.02;    // Fixed nominal return for cash (~0% real)
+const BLOCK_SIZE = 5;        // Block bootstrap: sample 5 consecutive historical years at a time
 
 export interface SimulationInputs {
   currentAge: number;
@@ -37,12 +38,6 @@ export interface SimulationResult {
   p90AtEnd: number;
   failureYear: number | null;
   failureAges: number[]; // age at failure for each failed simulation
-}
-
-function randomReturn(s: number, b: number, c: number): number {
-  const idx = Math.floor(Math.random() * RETURNS_DATA.length);
-  const { stocks, bonds } = RETURNS_DATA[idx];
-  return s * stocks + b * bonds + c * CASH_RETURN;
 }
 
 function glidedAlloc(
@@ -87,6 +82,7 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
     new Array(numSimulations).fill(0)
   );
 
+  const maxBlockStart = RETURNS_DATA.length - BLOCK_SIZE;
   let successes = 0;
   const failureAges: number[] = [];
 
@@ -95,6 +91,10 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
     let failedAtYear = -1;
 
     portfoliosByYear[0][sim] = portfolio;
+
+    // Block bootstrap state
+    let blockStart = Math.floor(Math.random() * (maxBlockStart + 1));
+    let blockPos = 0;
 
     for (let year = 1; year <= totalYears; year++) {
       if (failedAtYear >= 0) {
@@ -106,7 +106,14 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
         ? glidedAlloc(year, totalYears, normS, normB, normC)
         : [normS, normB, normC];
 
-      const ret = randomReturn(s, b, c);
+      // Advance block bootstrap: pick new block when current one is exhausted
+      if (blockPos >= BLOCK_SIZE) {
+        blockStart = Math.floor(Math.random() * (maxBlockStart + 1));
+        blockPos = 0;
+      }
+      const { stocks, bonds } = RETURNS_DATA[blockStart + blockPos];
+      blockPos++;
+      const ret = s * stocks + b * bonds + c * CASH_RETURN;
       const age = currentAge + year;
 
       if (age <= retirementAge) {
