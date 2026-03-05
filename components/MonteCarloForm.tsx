@@ -112,35 +112,10 @@ function normalizeAlloc(
   return { s: newS, b: remaining - newS, c: newVal };
 }
 
-function normalizeTaxAlloc(
-  changed: "trad" | "roth" | "taxable",
-  newVal: number,
-  t: number, r: number, x: number
-): { t: number; r: number; x: number } {
-  const remaining = 100 - newVal;
-  if (changed === "trad") {
-    const otherSum = r + x;
-    if (otherSum === 0) return { t: newVal, r: remaining, x: 0 };
-    const newR = Math.round((r / otherSum) * remaining);
-    return { t: newVal, r: newR, x: remaining - newR };
-  }
-  if (changed === "roth") {
-    const otherSum = t + x;
-    if (otherSum === 0) return { t: remaining, r: newVal, x: 0 };
-    const newT = Math.round((t / otherSum) * remaining);
-    return { t: newT, r: newVal, x: remaining - newT };
-  }
-  // taxable
-  const otherSum = t + r;
-  if (otherSum === 0) return { t: remaining, r: 0, x: newVal };
-  const newT = Math.round((t / otherSum) * remaining);
-  return { t: newT, r: remaining - newT, x: newVal };
-}
-
 export default function MonteCarloForm({ inputs, onChange, running }: Props) {
   const [showBridge, setShowBridge] = useState(inputs.bridgeIncome > 0);
   const [showTax, setShowTax] = useState(
-    inputs.traditionalPct + inputs.rothPct + inputs.taxablePct > 0
+    inputs.traditionalAmt + inputs.rothAmt + inputs.taxableAmt > 0
   );
   const set = (key: keyof SimulationInputs, value: number | boolean) =>
     onChange({ ...inputs, [key]: value });
@@ -148,10 +123,6 @@ export default function MonteCarloForm({ inputs, onChange, running }: Props) {
   const stockInt = Math.round(inputs.stockPct * 100);
   const bondInt  = Math.round(inputs.bondPct  * 100);
   const cashInt  = Math.round(inputs.cashPct  * 100);
-
-  const tradInt    = Math.round(inputs.traditionalPct * 100);
-  const rothInt    = Math.round(inputs.rothPct        * 100);
-  const taxableInt = Math.round(inputs.taxablePct     * 100);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col gap-6">
@@ -185,10 +156,54 @@ export default function MonteCarloForm({ inputs, onChange, running }: Props) {
         onChange={(v) => set("lifeExpectancy", v)} />
 
       {/* Portfolio */}
-      <div className="border-t border-gray-100 pt-4">
+      <div className="border-t border-gray-100 pt-4 flex flex-col gap-4">
         <InputRow label="Current Portfolio" value={inputs.currentPortfolio}
           min={0} max={10_000_000} step={5_000} prefix="$" inputWidth="w-28"
           onChange={(v) => set("currentPortfolio", v)} />
+
+        {/* Tax account breakdown */}
+        <button
+          onClick={() => setShowTax(!showTax)}
+          className="flex items-center gap-2 text-xs text-[#664930] font-semibold hover:underline w-fit"
+        >
+          <span>{showTax ? "▼" : "▶"}</span>
+          Break down by account type
+        </button>
+        {!showTax && (
+          <p className="text-xs text-gray-400 -mt-2">
+            Add account breakdown to model taxes on withdrawals
+          </p>
+        )}
+        {showTax && (
+          <div className="flex flex-col gap-3 pl-3 border-l-2 border-[#CCBEB1]">
+            <p className="text-xs text-gray-500">
+              Enter how much you have in each account type — used to calculate tax drag on withdrawals
+            </p>
+            <InputRow label="Traditional 401k / IRA" value={inputs.traditionalAmt}
+              min={0} max={10_000_000} step={5_000} prefix="$" inputWidth="w-28"
+              onChange={(v) => set("traditionalAmt", v)} />
+            <InputRow label="Roth 401k / IRA" value={inputs.rothAmt}
+              min={0} max={10_000_000} step={5_000} prefix="$" inputWidth="w-28"
+              onChange={(v) => set("rothAmt", v)} />
+            <InputRow label="Taxable Brokerage" value={inputs.taxableAmt}
+              min={0} max={10_000_000} step={5_000} prefix="$" inputWidth="w-28"
+              onChange={(v) => set("taxableAmt", v)} />
+            <div className="border-t border-gray-100 pt-3 flex flex-col gap-3">
+              <InputRow label="Ordinary income tax rate" value={Math.round(inputs.ordinaryTaxRate * 100)}
+                min={0} max={50} step={1} suffix="%" inputWidth="w-16"
+                onChange={(v) => set("ordinaryTaxRate", v / 100)} />
+              <p className="text-xs text-gray-400 -mt-2">Applied to Traditional 401k/IRA withdrawals</p>
+              <InputRow label="Long-term capital gains rate" value={Math.round(inputs.ltcgRate * 100)}
+                min={0} max={20} step={1} suffix="%" inputWidth="w-16"
+                onChange={(v) => set("ltcgRate", v / 100)} />
+              <p className="text-xs text-gray-400 -mt-2">Applied to gains in taxable brokerage</p>
+              <InputRow label="% of brokerage that is gains" value={Math.round(inputs.gainFraction * 100)}
+                min={0} max={100} step={5} suffix="%" inputWidth="w-16"
+                onChange={(v) => set("gainFraction", v / 100)} />
+              <p className="text-xs text-gray-400 -mt-2">Unrealized gains as % of your taxable account value</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <InputRow label="Annual Savings" value={inputs.annualSavings}
@@ -226,58 +241,6 @@ export default function MonteCarloForm({ inputs, onChange, running }: Props) {
               min={inputs.retirementAge} max={inputs.lifeExpectancy - 1} step={1}
               suffix=" yrs" inputWidth="w-16" onChange={(v) => set("bridgeUntilAge", v)} />
             <p className="text-xs text-gray-400 -mt-2">Part-time work income in early retirement</p>
-          </div>
-        )}
-      </div>
-
-      {/* Tax Assumptions */}
-      <div className="border-t border-gray-100 pt-4 flex flex-col gap-4">
-        <button
-          onClick={() => setShowTax(!showTax)}
-          className="flex items-center gap-2 text-xs text-[#664930] font-semibold hover:underline w-fit"
-        >
-          <span>{showTax ? "▼" : "▶"}</span>
-          Tax assumptions
-        </button>
-        {!showTax && (
-          <p className="text-xs text-gray-400 -mt-2">
-            Tax modeling off — spending treated as if all accounts are post-tax
-          </p>
-        )}
-        {showTax && (
-          <div className="flex flex-col gap-4">
-            <p className="text-xs text-gray-500">
-              Where your retirement savings actually live — sliders auto-normalize to 100%
-            </p>
-            <SliderField label="Traditional 401k / IRA" value={tradInt} min={0} max={100} step={5}
-              suffix="%" inputWidth="w-16" onChange={(v) => {
-                const { t, r, x } = normalizeTaxAlloc("trad", v, tradInt, rothInt, taxableInt);
-                onChange({ ...inputs, traditionalPct: t / 100, rothPct: r / 100, taxablePct: x / 100 });
-              }} />
-            <SliderField label="Roth 401k / IRA" value={rothInt} min={0} max={100} step={5}
-              suffix="%" inputWidth="w-16" onChange={(v) => {
-                const { t, r, x } = normalizeTaxAlloc("roth", v, tradInt, rothInt, taxableInt);
-                onChange({ ...inputs, traditionalPct: t / 100, rothPct: r / 100, taxablePct: x / 100 });
-              }} />
-            <SliderField label="Taxable Brokerage" value={taxableInt} min={0} max={100} step={5}
-              suffix="%" inputWidth="w-16" onChange={(v) => {
-                const { t, r, x } = normalizeTaxAlloc("taxable", v, tradInt, rothInt, taxableInt);
-                onChange({ ...inputs, traditionalPct: t / 100, rothPct: r / 100, taxablePct: x / 100 });
-              }} />
-            <div className="border-t border-gray-100 pt-3 flex flex-col gap-3">
-              <InputRow label="Ordinary income tax rate" value={Math.round(inputs.ordinaryTaxRate * 100)}
-                min={0} max={50} step={1} suffix="%" inputWidth="w-16"
-                onChange={(v) => set("ordinaryTaxRate", v / 100)} />
-              <p className="text-xs text-gray-400 -mt-2">Applied to Traditional 401k/IRA withdrawals</p>
-              <InputRow label="Long-term capital gains rate" value={Math.round(inputs.ltcgRate * 100)}
-                min={0} max={20} step={1} suffix="%" inputWidth="w-16"
-                onChange={(v) => set("ltcgRate", v / 100)} />
-              <p className="text-xs text-gray-400 -mt-2">Applied to gains in taxable brokerage</p>
-              <InputRow label="% of brokerage that is gains" value={Math.round(inputs.gainFraction * 100)}
-                min={0} max={100} step={5} suffix="%" inputWidth="w-16"
-                onChange={(v) => set("gainFraction", v / 100)} />
-              <p className="text-xs text-gray-400 -mt-2">Unrealized gains as % of your taxable account value</p>
-            </div>
           </div>
         )}
       </div>

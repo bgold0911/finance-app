@@ -19,9 +19,9 @@ export interface SimulationInputs {
   bridgeUntilAge: number;        // age bridge income stops
   useGlidePath: boolean;         // gradually shift to conservative allocation
   // Tax modeling (all default 0 = opt-in, no behavior change when off)
-  traditionalPct: number;        // fraction in traditional 401k/IRA (taxed as ordinary income)
-  rothPct: number;               // fraction in Roth (tax-free withdrawals)
-  taxablePct: number;            // fraction in taxable brokerage (gains taxed at LTCG rate)
+  traditionalAmt: number;        // dollar amount in traditional 401k/IRA (taxed as ordinary income)
+  rothAmt: number;               // dollar amount in Roth (tax-free withdrawals)
+  taxableAmt: number;            // dollar amount in taxable brokerage (gains taxed at LTCG rate)
   ordinaryTaxRate: number;       // effective ordinary income tax rate in retirement
   ltcgRate: number;              // long-term capital gains tax rate
   gainFraction: number;          // fraction of taxable brokerage that is unrealized gains
@@ -73,18 +73,19 @@ export function runSimulation(inputs: SimulationInputs, numSimulations = 1000): 
     stockPct, bondPct, cashPct,
     socialSecurityMonthly, bridgeIncome, bridgeUntilAge,
     useGlidePath,
-    traditionalPct, rothPct, taxablePct,
+    traditionalAmt, rothAmt, taxableAmt,
     ordinaryTaxRate, ltcgRate, gainFraction,
   } = inputs;
 
   const ssAnnual = socialSecurityMonthly * 12;
 
   // Tax gross-up factor: how much extra must be withdrawn per $1 of desired net spend
-  const taxAcctTotal = traditionalPct + rothPct + taxablePct;
+  // Fractions derived from dollar amounts entered by user
+  const taxAcctTotal = traditionalAmt + rothAmt + taxableAmt;
   const taxGrossFactor = taxAcctTotal > 0
-    ? (traditionalPct / (1 - ordinaryTaxRate))
-      + rothPct
-      + (taxablePct / (1 - gainFraction * ltcgRate))
+    ? ((traditionalAmt / taxAcctTotal) / (1 - ordinaryTaxRate))
+      + (rothAmt / taxAcctTotal)
+      + ((taxableAmt / taxAcctTotal) / (1 - gainFraction * ltcgRate))
     : 1;
 
   // Normalize allocation
