@@ -91,21 +91,26 @@ export default function HomePage() {
         <div className="h-1 bg-white/20" />
       </section>
 
-      {/* Stats bar */}
-      <section className="bg-[#4d3520] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p className="text-2xl font-bold text-white">1,000</p>
-            <p className="text-sm text-[#CCBEB1] mt-1">Simulations per run</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-white">97 years</p>
-            <p className="text-sm text-[#CCBEB1] mt-1">Of historical return data</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-white">100% free</p>
-            <p className="text-sm text-[#CCBEB1] mt-1">No account required</p>
-          </div>
+      {/* Question prompts */}
+      <section className="bg-[#4d3520]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { q: "Will my money last through retirement?",       tool: "Monte Carlo Simulator", href: "/tools/monte-carlo" },
+            { q: "Can I stop saving and still retire on track?", tool: "Coast FIRE Calculator", href: "/tools/coast-fire" },
+            { q: "Which debt should I pay off first?",           tool: "Debt Payoff Planner",   href: "/tools/debt-payoff" },
+            { q: "Is it smarter to buy a home or keep renting?", tool: "Rent vs. Buy Calculator", href: "/tools/rent-vs-buy" },
+          ].map(({ q, tool, href }) => (
+            <Link
+              key={href} href={href}
+              className="flex items-center justify-between gap-4 bg-white/5 hover:bg-white/10 transition-colors rounded-lg px-4 py-3 group"
+            >
+              <div>
+                <p className="text-sm font-medium text-white">{q}</p>
+                <p className="text-xs text-[#FFDBBB] mt-0.5">{tool} →</p>
+              </div>
+              <span className="text-[#CCBEB1] group-hover:text-white transition-colors text-lg shrink-0">›</span>
+            </Link>
+          ))}
         </div>
       </section>
 
