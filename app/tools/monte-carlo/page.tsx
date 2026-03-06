@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import MonteCarloForm from "@/components/MonteCarloForm";
 import MonteCarloChart from "@/components/MonteCarloChart";
 import ResultsSummary, { SensitivityRow, ModelComparison } from "@/components/ResultsSummary";
+import AffiliateCTA from "@/components/AffiliateCTA";
 import { SimulationInputs, SimulationResult, runSimulation } from "@/lib/monteCarlo";
 
 const DEFAULT_INPUTS: SimulationInputs = {
@@ -193,6 +194,7 @@ export default function MonteCarloPage() {
               Sensitivity scenarios each run 500 simulations. For educational purposes only — not financial advice.
             </p>
           </div>
+          <AffiliateCTA context="investing" />
         </div>
       </div>
     </div>

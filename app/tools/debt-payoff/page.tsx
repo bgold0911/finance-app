@@ -7,6 +7,7 @@ import {
 } from "recharts";
 import { calcDebtPayoff, Debt, DebtPayoffResult } from "@/lib/debtPayoff";
 import { formatDollars } from "@/lib/monteCarlo";
+import AffiliateCTA from "@/components/AffiliateCTA";
 
 let nextId = 3;
 const DEFAULT_DEBTS: Debt[] = [
@@ -288,6 +289,7 @@ export default function DebtPayoffPage() {
               For educational purposes only — not financial advice.
             </p>
           </div>
+          <AffiliateCTA context="debt" />
         </div>
       </div>
     </div>

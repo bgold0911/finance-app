@@ -7,6 +7,7 @@ import {
 } from "recharts";
 import { calcCoastFire, CoastInputs, CoastYearData } from "@/lib/coastFire";
 import { formatDollars } from "@/lib/monteCarlo";
+import AffiliateCTA from "@/components/AffiliateCTA";
 
 const DEFAULT_INPUTS: CoastInputs = {
   currentAge: 30,
@@ -299,6 +300,7 @@ export default function CoastFirePage() {
               For educational purposes only — not financial advice.
             </p>
           </div>
+          <AffiliateCTA context="investing" />
         </div>
       </div>
     </div>

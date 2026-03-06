@@ -7,6 +7,7 @@ import {
 } from "recharts";
 import { calcRentVsBuy, RentVsBuyInputs } from "@/lib/rentVsBuy";
 import { formatDollars } from "@/lib/monteCarlo";
+import AffiliateCTA from "@/components/AffiliateCTA";
 
 const DEFAULT_INPUTS: RentVsBuyInputs = {
   homePrice: 500_000,
@@ -279,6 +280,7 @@ export default function RentVsBuyPage() {
               Does not include closing costs (~2–5%). For educational purposes only — not financial advice.
             </p>
           </div>
+          <AffiliateCTA context="mortgage" />
         </div>
       </div>
     </div>
