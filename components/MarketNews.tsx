@@ -1,9 +1,4 @@
-interface NewsItem {
-  title: string;
-  url: string;
-  source: string;
-  pubDate: string;
-}
+import { fetchNews, type NewsItem } from "@/lib/fetchNews";
 
 function timeAgo(pubDate: string): string {
   if (!pubDate) return "";
@@ -11,28 +6,18 @@ function timeAgo(pubDate: string): string {
   if (isNaN(date.getTime())) return "";
   const diffMs = Date.now() - date.getTime();
   const diffH = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffH < 1) {
-    const diffM = Math.floor(diffMs / (1000 * 60));
-    return `${diffM}m ago`;
-  }
+  if (diffH < 1) return `${Math.floor(diffMs / (1000 * 60))}m ago`;
   if (diffH < 24) return `${diffH}h ago`;
   return `${Math.floor(diffH / 24)}d ago`;
 }
 
-async function getNews(): Promise<NewsItem[]> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/api/news`, {
-      next: { revalidate: 1800 },
-    });
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
-}
-
 export default async function MarketNews() {
-  const items = await getNews();
+  let items: NewsItem[] = [];
+  try {
+    items = await fetchNews();
+  } catch {
+    return null;
+  }
   if (items.length === 0) return null;
 
   return (
@@ -40,7 +25,9 @@ export default async function MarketNews() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-xl font-bold text-[#664930]">Today&apos;s Market News</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Updated every 30 minutes · {items[0]?.source ?? "Reuters"}</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Updated every 30 minutes · {items[0]?.source ?? "Reuters"}
+          </p>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
