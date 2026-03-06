@@ -1,6 +1,8 @@
 import Link from "next/link";
 import MarketNews from "@/components/MarketNews";
 
+export const dynamic = "force-dynamic";
+
 const TOOLS = [
   {
     href: "/tools/monte-carlo",
