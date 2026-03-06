@@ -12,26 +12,6 @@ const TOOLS = [
     available: true,
   },
   {
-    href: "#",
-    icon: "📋",
-    title: "Budget Calculator",
-    description:
-      "Break down your income into needs, wants, and savings using the 50/30/20 rule. Get a visual breakdown and personalized targets.",
-    tag: "COMING SOON",
-    tagColor: "bg-gray-100 text-gray-500",
-    available: false,
-  },
-  {
-    href: "#",
-    icon: "📈",
-    title: "Compound Interest",
-    description:
-      "See how your investments grow over time. Adjust contribution, rate, and timeline with live-updating charts.",
-    tag: "COMING SOON",
-    tagColor: "bg-gray-100 text-gray-500",
-    available: false,
-  },
-  {
     href: "/tools/debt-payoff",
     icon: "💳",
     title: "Debt Payoff Planner",
